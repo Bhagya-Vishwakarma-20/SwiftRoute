@@ -1,0 +1,39 @@
+
+services:
+  redirect-redis:
+    image: redis
+    container_name: redirect-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+
+  redirect-rabbitmq:
+    image: rabbitmq:3-management
+    container_name: redirect-rabbitmq
+    restart: unless-stopped
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+
+  analytics:
+    image: bhagya888/analytics-worker
+    container_name: analytics
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    depends_on:
+      - redirect-rabbitmq
+      - redirect-redis
+
+  redirect:
+    image: bhagya888/redirect
+    container_name: redirect
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      - redirect-redis
+      - redirect-rabbitmq
+
+  
