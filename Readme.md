@@ -56,15 +56,22 @@ A production-grade URL shortening service built with an **event-driven microserv
 
 ### Event-Driven Analytics Decoupling
 
-The redirect API and analytics worker are **independently deployable microservices** communicating through RabbitMQ. On every redirect, the API fires a click event onto a **durable queue** and immediately responds with a `302` — zero blocking. The analytics worker consumes these events asynchronously, enriches them with geo data, and persists them. Business analytics storage is deliberately separated from the observability pipeline to avoid coupling product features with monitoring infrastructure.
+- Redirect API and analytics worker are **independently deployable microservices**
+- On every redirect, a click event is published to a **durable RabbitMQ queue** → immediate `302` response, zero blocking
+- Analytics worker **consumes asynchronously**, enriches with geo data, and persists
+- Business analytics storage is separated from the observability pipeline — no coupling between product features and monitoring
 
 ### Sliding Window Rate Limiting (Redis Sorted Sets)
 
-Rather than a naive fixed-window counter, the rate limiter uses `ZADD` with timestamps as scores in a Redis sorted set per IP. On each request it trims entries outside the window (`ZREMRANGEBYSCORE`), counts remaining members (`ZCARD`), and either admits or rejects. This produces a smooth, accurate throttle — no burst-at-boundary edge cases.
+- Uses `ZADD` with timestamps as scores in a **sorted set per IP** — not a naive fixed-window counter
+- Each request: trim expired entries (`ZREMRANGEBYSCORE`) → count remaining (`ZCARD`) → admit or reject
+- Produces a **smooth, accurate throttle** with no burst-at-boundary edge cases
 
 ### Multi-Layer Caching
 
-Short-link lookups hit **Redis first** before touching Postgres. Cache TTLs are derived from the link's expiry, so expired links are never served stale. This keeps p99 redirect latency low while Postgres handles the durable write path.
+- Short-link lookups hit **Redis first** before touching Postgres
+- Cache TTLs derived from the link's expiry — expired links are never served stale
+- Keeps p99 redirect latency low while Postgres handles the durable write path
 
 ---
 
@@ -84,49 +91,6 @@ Short-link lookups hit **Redis first** before touching Postgres. Cache TTLs are 
 
 ---
 
-## Project Structure
-
-```
-├── index.js                    # App entrypoint — Express bootstrap
-├── newrelic.js                 # New Relic agent config
-├── Dockerfile                  # Multi-stage production build
-├── docker-compose.yml          # Full stack orchestration
-│
-├── routes/
-│   ├── index.js                # Route aggregator
-│   └── url.route.js            # POST / (shorten) · GET /:code (redirect)
-│
-├── controlllers/
-│   └── url.controller.js       # Shorten + redirect logic, fires click events
-│
-├── services/
-│   ├── url.service.js          # Code generation, Redis cache, DB lookup
-│   └── analytics.service.js    # Publishes click events to RabbitMQ
-│
-├── middlewares/
-│   ├── rateLimiter.middleware.js   # Sliding window (ZADD) rate limiter
-│   └── error.middleware.js         # Global error handler + 404
-│
-├── lib/
-│   ├── prismaClient.js         # Prisma singleton
-│   └── rabbitmq.js             # AMQP channel + queue setup
-│
-├── config/
-│   ├── redis.config.js         # Redis client
-│   └── winston.config.js       # Log format + transports
-│
-├── utils/
-│   ├── db.js                   # DB adapter export
-│   ├── dbErrorHandler.js       # Prisma error → HTTP status mapper
-│   ├── geo.js                  # IP → country resolver
-│   └── logger.js               # Winston logger instance
-│
-└── prisma/
-    └── schema.prisma           # URL, Click models
-```
-
----
-
 ## Quick Start
 
 ### Docker Compose (recommended)
@@ -140,7 +104,7 @@ This spins up **four services** on an internal network:
 | Service | Port | Description |
 |---|---|---|
 | `redirect` | 3000 | Redirect API |
-| `analytics` | 3001 | Analytics worker |
+| `analytics` | -- | Analytics worker |
 | `redirect-redis` | 6379 | Redis |
 | `redirect-rabbitmq` | 5672 / 15672 | RabbitMQ + Management UI |
 
