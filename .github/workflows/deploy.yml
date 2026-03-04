@@ -32,5 +32,5 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             docker pull ${{ secrets.DOCKER_USERNAME }}/redirect:latest
-            docker compose down
-            docker compose up -d
+            docker-compose down
+            docker-compose up -d
