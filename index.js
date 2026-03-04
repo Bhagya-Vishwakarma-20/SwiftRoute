@@ -16,6 +16,8 @@ app.set("trust proxy", true);
 app.use(cookieParser())
 app.use(express.json({urlencoded:true}));
 
+app.use('/docs', express.static('docs'));
+
 app.use('/health',(req,res)=>{
     res.json({status:"ok"});
 })

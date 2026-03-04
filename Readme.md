@@ -1,6 +1,17 @@
- # ⚡ SwiftRoute — High-Performance URL Shortener
+ # SwiftRoute — High-Performance URL Shortener
 
 A production-grade URL shortening service built with an **event-driven microservices architecture**. The system cleanly separates the low-latency redirect API from heavy analytics processing, communicating through RabbitMQ — enabling each service to be scaled, deployed, and versioned independently.
+
+---
+
+---
+
+## API Reference
+
+| Method | Endpoint | Description | Body |
+|---|---|---|---|
+| `POST` | `/url` | Shorten a URL | `{ url, expiry }` |
+| `GET` | `/url/:code` | Redirect to target (rate-limited) | — |
 
 ---
 
@@ -143,16 +154,7 @@ docker run --name analytics-worker --network my-net bhagya888/analytics-worker
 docker run --name redirect --network my-net -p 3000:3000 bhagya888/redirect
 ```
 
----
 
-## API Reference
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `POST` | `/url` | Shorten a URL |
-| `GET` | `/url/:code` | Redirect to target (rate-limited) |
-
----
 
 ## CI / CD
 
@@ -201,8 +203,7 @@ CI and CD are **separate workflows**. CD only triggers after CI passes — a fai
 
 ```bash
 npm install
-npm test                 # runs all unit tests
-npm test -- --coverage   # with coverage report
+npm test                 
 ```
 
 ---

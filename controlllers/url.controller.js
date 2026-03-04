@@ -36,7 +36,6 @@ exports.generateUrl = async (req, res) => {
         throw err;
     }
     
-    // Generate URL from request
     const newUrl = `${req.protocol}://${req.get('host')}/url/${data.code}`;
     
     const expiresAt = data.expiresAt ? data.expiresAt : 'Never';
