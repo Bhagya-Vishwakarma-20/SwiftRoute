@@ -130,6 +130,10 @@ Custom NRQL dashboards provide real-time visibility into service health, worker 
 
 ## Quick Start
 
+> IMPORTANT \
+> Rename `.env.example` to `.env` and fill in all required fields before starting:
+
+
 ### Docker Compose (recommended)
 
 ```bash
