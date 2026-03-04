@@ -25,6 +25,10 @@ services:
     depends_on:
       - redirect-rabbitmq
       - redirect-redis
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - AMQP_URL=${AMQP_URL}
+      - NEWRELIC_LICENSE=${NEWRELIC_LICENSE_2}
 
   redirect:
     image: bhagya888/redirect
@@ -35,5 +39,12 @@ services:
     depends_on:
       - redirect-redis
       - redirect-rabbitmq
+    environment:
+      - JWT_SECRET=${JWT_SECRET}
+      - DATABASE_URL=${DATABASE_URL}
+      - CURRENT_URL=${CURRENT_URL}
+      - REDIS_URL=${REDIS_URL}
+      - AMQP_URL=${AMQP_URL}
+      - NEWRELIC_LICENSE=${NEWRELIC_LICENSE}
 
   
