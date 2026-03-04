@@ -87,6 +87,8 @@ A production-grade URL shortening service built with an **event-driven microserv
 | **Geo** | geoip-lite + request-ip | Country-wise traffic analytics from IP |
 | **Logging** | Winston | Structured JSON logs (file + console) |
 | **APM** | New Relic + NRQL | Performance monitoring, custom dashboards & charts |
+| **Testing** | Jest + Supertest | Unit tests with mocked dependencies |
+| **CI/CD** | GitHub Actions + Jenkins | Gated pipelines — CD only after CI passes |
 | **Containers** | Docker + Docker Compose | Multi-stage builds, service orchestration |
 
 ---
@@ -125,6 +127,59 @@ docker run --name redirect --network my-net -p 3000:3000 bhagya888/redirect
 |---|---|---|
 | `POST` | `/url` | Shorten a URL |
 | `GET` | `/url/:code` | Redirect to target (rate-limited) |
+
+---
+
+## CI / CD
+
+CI and CD are **separate workflows**. CD only triggers after CI passes — a failed test run means zero deploys.
+
+```
+  push / PR to main
+        │
+        ▼
+  ┌──────────────┐       FAIL → stops here, deploy.yml never fires
+  │  ci.yml      │
+  │  Unit Tests  │
+  └──────┬───────┘
+         │ PASS  (push to main only)
+         │
+         │  workflow_run trigger
+         ▼
+  ┌──────────────┐
+  │  deploy.yml  │
+  │  Build →     │
+  │  Push →      │
+  │  SSH Deploy  │
+  │  to EC2      │
+  └──────────────┘
+
+  PR builds ─── CI only, no deploy
+```
+
+### GitHub Actions
+
+| Workflow | File | Trigger | What it does |
+|---|---|---|---|
+| **CI** | `ci.yml` | push & PR to `main` | `npm ci` → `prisma generate` → `npm test` |
+| **CD** | `deploy.yml` | `workflow_run` after CI succeeds on `main` | Docker build → push → SSH deploy to EC2 |
+
+
+### Jenkins (`Jenkinsfile`)
+
+| Stage Group | Gate | What it does |
+|---|---|---|
+| **CI** | always | Checkout → Install → Prisma Generate → Unit Tests |
+| **CD** | CI passes + `main` branch | Docker Build → Docker Push |
+
+
+### Running Tests Locally
+
+```bash
+npm install
+npm test                 # runs all unit tests
+npm test -- --coverage   # with coverage report
+```
 
 ---
 

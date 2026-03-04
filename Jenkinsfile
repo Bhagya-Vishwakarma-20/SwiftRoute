@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     tools {
-        nodejs 'Node-20'   
+        nodejs 'Node-20'
     }
 
     environment {
@@ -17,57 +17,67 @@ pipeline {
     }
 
     stages {
-        stage('Checkout') {
-            steps {
-                checkout scm
-            }
-        }
+        stage('CI') {
+            stages {
+                stage('Checkout') {
+                    steps {
+                        checkout scm
+                    }
+                }
 
-        stage('Install Dependencies') {
-            steps {
-                sh 'npm ci'
-            }
-        }
+                stage('Install Dependencies') {
+                    steps {
+                        sh 'npm ci'
+                    }
+                }
 
-        stage('Generate Prisma Client') {
-            steps {
-                sh 'npx prisma generate'
-            }
-        }
+                stage('Generate Prisma Client') {
+                    steps {
+                        sh 'npx prisma generate'
+                    }
+                }
 
-        stage('Unit Tests') {
-            steps {
-                sh 'npm test'
-            }
-            post {
-                always {
-                    echo 'Tests stage completed'
+                stage('Unit Tests') {
+                    steps {
+                        sh 'npm test'
+                    }
+                    post {
+                        always {
+                            echo 'CI — Tests stage completed'
+                        }
+                    }
                 }
             }
         }
 
-        stage('Docker Build') {
-            steps {
-                sh "docker build -t ${DOCKER_IMAGE}:build-${BUILD_NUMBER} ."
-            }
-        }
-
-        stage('Docker Push') {
+        stage('CD') {
             when {
-                branch 'main'
+                allOf {
+                    branch 'main'
+                }
             }
-            steps {
-                withCredentials([usernamePassword(
-                    credentialsId: 'dockerhub-creds',
-                    usernameVariable: 'DOCKER_USER',
-                    passwordVariable: 'DOCKER_PASS'
-                )]) {
-                    sh '''
-                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-                        docker tag ${DOCKER_IMAGE}:build-${BUILD_NUMBER} ${DOCKER_IMAGE}:latest
-                        docker push ${DOCKER_IMAGE}:build-${BUILD_NUMBER}
-                        docker push ${DOCKER_IMAGE}:latest
-                    '''
+            stages {
+                stage('Docker Build') {
+                    steps {
+                        sh "docker build -t ${DOCKER_IMAGE}:build-${BUILD_NUMBER} ."
+                    }
+                }
+
+                stage('Docker Push') {
+                    steps {
+                        withCredentials([usernamePassword(
+                            credentialsId: 'dockerhub-creds',
+                            usernameVariable: 'DOCKER_USER',
+                            passwordVariable: 'DOCKER_PASS'
+                        )]) {
+                            sh '''
+                                echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                                docker tag ${DOCKER_IMAGE}:build-${BUILD_NUMBER} ${DOCKER_IMAGE}:latest
+                                docker push ${DOCKER_IMAGE}:build-${BUILD_NUMBER}
+                                docker push ${DOCKER_IMAGE}:latest
+                            '''
+                        }
+                    }
                 }
             }
         }
