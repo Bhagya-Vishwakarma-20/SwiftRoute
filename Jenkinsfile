@@ -8,7 +8,6 @@ pipeline {
     environment {
         JWT_SECRET    = 'ci-test-secret'
         NODE_ENV      = 'test'
-        DOCKER_IMAGE  = 'bhagya888/redirect'
     }
 
     options {
@@ -57,13 +56,7 @@ pipeline {
                 }
             }
             stages {
-                stage('Docker Build') {
-                    steps {
-                        sh "docker build -t ${DOCKER_IMAGE}:build-${BUILD_NUMBER} ."
-                    }
-                }
-
-                stage('Docker Push') {
+                stage('Docker Build & Push') {
                     steps {
                         withCredentials([usernamePassword(
                             credentialsId: 'dockerhub-creds',
@@ -71,10 +64,11 @@ pipeline {
                             passwordVariable: 'DOCKER_PASS'
                         )]) {
                             sh '''
+                                docker build -t "$DOCKER_USER/redirect:build-${BUILD_NUMBER}" .
                                 echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-                                docker tag ${DOCKER_IMAGE}:build-${BUILD_NUMBER} ${DOCKER_IMAGE}:latest
-                                docker push ${DOCKER_IMAGE}:build-${BUILD_NUMBER}
-                                docker push ${DOCKER_IMAGE}:latest
+                                docker tag "$DOCKER_USER/redirect:build-${BUILD_NUMBER}" "$DOCKER_USER/redirect:latest"
+                                docker push "$DOCKER_USER/redirect:build-${BUILD_NUMBER}"
+                                docker push "$DOCKER_USER/redirect:latest"
                             '''
                         }
                     }

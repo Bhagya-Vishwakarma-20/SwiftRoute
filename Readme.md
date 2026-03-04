@@ -61,12 +61,6 @@ A production-grade URL shortening service built with an **event-driven microserv
 - Analytics worker **consumes asynchronously**, enriches with geo data, and persists
 - Business analytics storage is separated from the observability pipeline — no coupling between product features and monitoring
 
-### Sliding Window Rate Limiting (Redis Sorted Sets)
-
-- Uses `ZADD` with timestamps as scores in a **sorted set per IP** — not a naive fixed-window counter
-- Each request: trim expired entries (`ZREMRANGEBYSCORE`) → count remaining (`ZCARD`) → admit or reject
-- Produces a **smooth, accurate throttle** with no burst-at-boundary edge cases
-
 ### Multi-Layer Caching
 
 - Short-link lookups hit **Redis first** before touching Postgres
