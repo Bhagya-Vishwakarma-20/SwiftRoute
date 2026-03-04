@@ -17,7 +17,7 @@ app.use(cookieParser())
 app.use(express.json({urlencoded:true}));
 
 app.use('/health',(req,res)=>{
-    res.json({status:ok});
+    res.json({status:"ok"});
 })
 app.use('/',routes);
 
@@ -25,4 +25,9 @@ app.use(notFoundHandler);
 
 app.use(errorHandler);
 
-app.listen(3000);
+// Only start listening when run directly (not when imported for testing)
+if (require.main === module) {
+  app.listen(3000);
+}
+
+module.exports = app;
