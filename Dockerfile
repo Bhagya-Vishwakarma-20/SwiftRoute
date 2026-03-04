@@ -29,6 +29,8 @@ COPY prisma ./prisma
 COPY routes ./routes
 COPY services ./services
 COPY utils ./utils
+COPY docs ./docs
+COPY Readme.md ./Readme.md
 EXPOSE 3000
 
 CMD ["node", "-r", "newrelic", "index.js"]
