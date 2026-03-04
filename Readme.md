@@ -69,6 +69,36 @@ A production-grade URL shortening service built with an **event-driven microserv
 
 ---
 
+## Observability — New Relic Dashboards
+
+Custom NRQL dashboards provide real-time visibility into service health, worker performance, and cache efficiency.
+
+### Redirect API
+
+<p align="center">
+  <img src="docs/images/nr-redirect-api.png" alt="Redirect API Dashboard" width="90%" />
+</p>
+
+> Throughput, response time, and error rate for the main redirect service.
+
+### Analytics Worker
+
+<p align="center">
+  <img src="docs/images/nr-analytics-worker.png" alt="Analytics Worker Dashboard" width="90%" />
+</p>
+
+> RabbitMQ consume rate
+
+### Redis Cache — Hit / Miss Rate
+
+<p align="center">
+  <img src="docs/images/nr-redis-cache.png" alt="Redis Cache Hit Miss" width="90%" />
+</p>
+
+> Cache hit vs. miss percentage for short-link lookups — measures how effectively Redis shields Postgres.
+
+---
+
 ## Tech Stack
 
 | Layer | Technology | Purpose |
