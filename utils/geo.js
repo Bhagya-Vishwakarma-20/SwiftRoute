@@ -15,7 +15,7 @@ async function  getGeoData(req) {
 
   return {
     ip,
-    country:"India",
+    country:geo.country ? geo.country : "India",
   };
 }
 
