@@ -1,11 +1,33 @@
-
 services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: redirect-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   redirect-redis:
     image: redis
     container_name: redirect-redis
     restart: unless-stopped
     ports:
       - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   redirect-rabbitmq:
     image: rabbitmq:3-management
@@ -14,37 +36,64 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
 
+  # One-shot: applies prisma/migrations to the postgres above, then exits.
+  migrate:
+    image: bhagya888/redirect
+    build: .
+    container_name: redirect-migrate
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public
+    command: ["npx", "prisma", "migrate", "deploy"]
 
   analytics:
     image: bhagya888/analytics-worker
+    build: ./SwiftRoute-Analytics-worker
     container_name: analytics
     restart: unless-stopped
-    ports:
-      - "3001:3001"
     depends_on:
-      - redirect-rabbitmq
-      - redirect-redis
+      redirect-rabbitmq:
+        condition: service_healthy
+      redirect-redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     environment:
-      - DATABASE_URL=${DATABASE_URL}
-      - AMQP_URL=${AMQP_URL}
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public
+      - AMQP_URL=amqp://guest:guest@redirect-rabbitmq:5672
       - NEWRELIC_LICENSE=${NEWRELIC_LICENSE_2}
 
   redirect:
     image: bhagya888/redirect
+    build: .
     container_name: redirect
     restart: unless-stopped
     ports:
       - "3000:3000"
+      - "51212:51212"
     depends_on:
-      - redirect-redis
-      - redirect-rabbitmq
+      redirect-redis:
+        condition: service_healthy
+      redirect-rabbitmq:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     environment:
       - JWT_SECRET=${JWT_SECRET}
-      - DATABASE_URL=${DATABASE_URL}
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public
       - CURRENT_URL=${CURRENT_URL}
-      - REDIS_URL=${REDIS_URL}
-      - AMQP_URL=${AMQP_URL}
+      - REDIS_URL=redis://redirect-redis:6379
+      - AMQP_URL=amqp://guest:guest@redirect-rabbitmq:5672
       - NEWRELIC_LICENSE=${NEWRELIC_LICENSE}
 
-  
+volumes:
+  postgres-data:

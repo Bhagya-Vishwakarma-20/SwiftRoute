@@ -9,4 +9,6 @@ docker-compose.yml
 .idea
 *.log
 generated
+SwiftRoute-Analytics-worker
+tests
 

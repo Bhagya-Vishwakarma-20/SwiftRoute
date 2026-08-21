@@ -1,6 +1,6 @@
 # Dependencies
 node_modules/
-
+SwiftRoute-Analytics-worker/ 
 
 # Environment variables
 .env
@@ -49,6 +49,7 @@ temp/
 # Testing
 coverage/
 .nyc_output
+loadtest/codes.json
 
 # Redis/RabbitMQ local cache
 cache/

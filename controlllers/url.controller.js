@@ -1,20 +1,20 @@
 const { generateUrl, getTargetUrlFromCode } = require('../services/url.service')
 const { logger } = require('../utils/logger');
-const {publishClickEvents} = require('../services/analytics.service')
-const {getGeoData} = require('../utils/geo');
-const  handleClickEvent = async (req, link)=> {
-  const { ip, country } = getGeoData(req);
+const { publishClickEvents } = require('../services/analytics.service')
+const { getGeoData } = require('../utils/geo');
+const handleClickEvent = async (req, link) => {
+    const { ip, country } = await getGeoData(req);
 
-  const clickData = {
-    linkId: link,
-    ip,
-    country,
-    userAgent: req.headers["user-agent"] || null,
-    referrer: req.headers["referer"] || null,
-    timestamp: new Date(),
-  };
+    const clickData = {
+        linkId: link,
+        ip,
+        country,
+        userAgent: req.headers["user-agent"] || null,
+        referrer: req.headers["referer"] || null,
+        timestamp: new Date(),
+    };
 
-  publishClickEvents(clickData);
+    publishClickEvents(clickData);
 }
 
 exports.generateUrl = async (req, res) => {
@@ -22,7 +22,7 @@ exports.generateUrl = async (req, res) => {
     if (!url) {
         return res.status(400).json({ message: "url is required" });
     }
-    
+
     const data = await generateUrl(url, expiry);
     if (!data) {
         logger.error({
@@ -35,9 +35,9 @@ exports.generateUrl = async (req, res) => {
         err.statusCode = 442;
         throw err;
     }
-    
+
     const newUrl = `${req.protocol}://${req.get('host')}/url/${data.code}`;
-    
+
     const expiresAt = data.expiresAt ? data.expiresAt : 'Never';
     logger.info({
         event: "link_created",
@@ -78,6 +78,11 @@ exports.redirectCodedUrl = async (req, res) => {
         ip: req.ip,
         userAgent: req.headers["user-agent"]
     });
-    handleClickEvent(req,url);
+    handleClickEvent(req, url).catch((error) => {
+        logger.error("Failed to handle click event", {
+            event: "click_event_error",
+            error: error.message
+        });
+    });
     res.redirect(url);
 }

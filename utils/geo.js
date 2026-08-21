@@ -1,8 +1,8 @@
 const geoip = require("geoip-lite");
 const requestIp = require("request-ip");
 
-function getGeoData(req) {
-  const ip = requestIp.getClientIp(req);
+async function  getGeoData(req) {
+  const ip =  await requestIp.getClientIp(req);
 
   if (!ip) {
     return {
@@ -11,11 +11,11 @@ function getGeoData(req) {
     };
   }
 
-  const geo = geoip.lookup(ip);
+  const geo = await geoip.lookup(ip);
 
   return {
     ip,
-    country: geo ? geo.country : null,
+    country:"India",
   };
 }
 
