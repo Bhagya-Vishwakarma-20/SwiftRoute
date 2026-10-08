@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: swiftroute-redirect
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    branch: render
+    plan: free
+    region: singapore
+    healthCheckPath: /health
+    # Free instances don't support preDeployCommand, so migrate on boot.
+    dockerCommand: sh -c "npx prisma migrate deploy && node -r newrelic index.js"
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: swiftroute-db
+          property: connectionString
+      - key: REDIS_URL
+        sync: false
+      - key: AMQP_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CURRENT_URL
+        sync: false
+      - key: NEWRELIC_LICENSE
+        sync: false
+
+databases:
+  - name: swiftroute-db
+    databaseName: swiftroute
+    plan: free
+    region: singapore

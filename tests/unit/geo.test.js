@@ -10,26 +10,26 @@ describe('geo utility', () => {
     jest.clearAllMocks();
   });
 
-  it('should return ip and country when both are available', () => {
+  it('should return ip and country when both are available', async () => {
     requestIp.getClientIp.mockReturnValue('8.8.8.8');
     geoip.lookup.mockReturnValue({ country: 'US' });
 
-    const result = getGeoData({});
+    const result = await getGeoData({});
     expect(result).toEqual({ ip: '8.8.8.8', country: 'US' });
   });
 
-  it('should return null country when geoip lookup fails', () => {
+  it('should default country to India when geoip lookup fails', async () => {
     requestIp.getClientIp.mockReturnValue('192.168.1.1');
     geoip.lookup.mockReturnValue(null);
 
-    const result = getGeoData({});
-    expect(result).toEqual({ ip: '192.168.1.1', country: null });
+    const result = await getGeoData({});
+    expect(result).toEqual({ ip: '192.168.1.1', country: 'India' });
   });
 
-  it('should return null ip and country when IP is not found', () => {
+  it('should return null ip and country when IP is not found', async () => {
     requestIp.getClientIp.mockReturnValue(null);
 
-    const result = getGeoData({});
+    const result = await getGeoData({});
     expect(result).toEqual({ ip: null, country: null });
     expect(geoip.lookup).not.toHaveBeenCalled();
   });

@@ -29,7 +29,7 @@ app.use(errorHandler);
 
 // Only start listening when run directly (not when imported for testing)
 if (require.main === module) {
-  app.listen(3000);
+  app.listen(process.env.PORT || 3000);
 }
 
 module.exports = app;
