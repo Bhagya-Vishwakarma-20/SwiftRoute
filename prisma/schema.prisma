@@ -32,6 +32,12 @@ model Click {
   linkId    String
   ip        String?
   country   String?
+  region    String?
+  city      String?
+  latitude  Float?
+  longitude Float?
+  timezone  String?
+  accuracyRadius Int?
   userAgent String?
   referrer  String?
   timestamp DateTime @default(now())

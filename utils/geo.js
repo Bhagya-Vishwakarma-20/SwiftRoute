@@ -1,6 +1,17 @@
 const geoip = require("geoip-lite");
 const requestIp = require("request-ip");
 
+const orNull = (v) => (v === undefined || v === null || v === "" ? null : v);
+
+const EMPTY_LOCATION = {
+  region: null,
+  city: null,
+  latitude: null,
+  longitude: null,
+  timezone: null,
+  accuracyRadius: null,
+};
+
 async function  getGeoData(req) {
   const ip =  await requestIp.getClientIp(req);
 
@@ -8,6 +19,7 @@ async function  getGeoData(req) {
     return {
       ip: null,
       country: null,
+      ...EMPTY_LOCATION,
     };
   }
 
@@ -16,6 +28,12 @@ async function  getGeoData(req) {
   return {
     ip,
     country:geo?.country ? geo.country : "India",
+    region: orNull(geo?.region),
+    city: orNull(geo?.city),
+    latitude: orNull(geo?.ll?.[0]),
+    longitude: orNull(geo?.ll?.[1]),
+    timezone: orNull(geo?.timezone),
+    accuracyRadius: orNull(geo?.area),
   };
 }
 

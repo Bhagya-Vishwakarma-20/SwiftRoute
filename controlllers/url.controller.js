@@ -3,12 +3,18 @@ const { logger } = require('../utils/logger');
 const { publishClickEvents } = require('../services/analytics.service')
 const { getGeoData } = require('../utils/geo');
 const handleClickEvent = async (req, link) => {
-    const { ip, country } = await getGeoData(req);
+    const { ip, country, region, city, latitude, longitude, timezone, accuracyRadius } = await getGeoData(req);
 
     const clickData = {
         linkId: link,
         ip,
         country,
+        region,
+        city,
+        latitude,
+        longitude,
+        timezone,
+        accuracyRadius,
         userAgent: req.headers["user-agent"] || null,
         referrer: req.headers["referer"] || null,
         timestamp: new Date(),
