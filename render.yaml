@@ -8,7 +8,7 @@ services:
     region: singapore
     healthCheckPath: /health
     # Free instances don't support preDeployCommand, so migrate on boot.
-    dockerCommand: sh -c "npx prisma migrate deploy && node -r newrelic index.js"
+    dockerCommand: npm run start:render
     envVars:
       - key: DATABASE_URL
         fromDatabase:
